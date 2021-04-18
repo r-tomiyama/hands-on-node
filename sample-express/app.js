@@ -30,9 +30,37 @@ app.post('/api/todos', (req, res, next) => {
     res.status(201).json(todo)
 })
 
+app.use('/api/todos/:id(\\d+)', (req, res, next) => {
+    const id = Number(req.params.id)
+    const todo = todos.find(todo => todo.id === id)
+
+    if (!todo) {
+        const err = new Error('todo is not found')
+        err.statusCode = 404
+        return next(err)
+    }
+    req.todo = todo
+    next()
+})
+
+app.route('/api/todos/:id(\\d+)/completed')
+    .put((req, res) => {
+        req.todo.completed = true
+        res.status(200).json(req.todo)
+    })
+    .delete((req, res) => {
+        req.todo.completed = false
+        res.status(200).json(req.todo)
+    })
+
 app.use((err, req, res, next) => {
     console.error(err)
     res.status(err.statusCode || 500).json({error: err.message})
+})
+
+app.delete('/api/todos/:id(\\d+)/', (req, res, next) => {
+    todos = todos.filter(todo => todo == req.todo)
+    res.status(200).end()
 })
 
 app.listen(3000)
